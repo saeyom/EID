@@ -568,7 +568,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const url = URL.createObjectURL(blob);
             const a = document.createElement("a");
             a.href = url;
-            a.download = "Eid-AlAdha-Saey-Greeting.png";
+            a.download = "123.png";
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);

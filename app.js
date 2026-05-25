@@ -519,8 +519,8 @@ document.addEventListener("DOMContentLoaded", () => {
         ctx.strokeStyle = "rgba(100, 223, 223, 0.2)";
         ctx.lineWidth = 1.5;
         ctx.beginPath();
-        ctx.moveTo(w / 2 - 120, h - 250);
-        ctx.lineTo(w / 2 + 120, h - 250);
+        ctx.moveTo(w / 2 - 120, h - 320);
+        ctx.lineTo(w / 2 + 120, h - 320);
         ctx.stroke();
 
         // Load and Draw Logo Image with Screen Blending Mode
@@ -541,7 +541,7 @@ document.addEventListener("DOMContentLoaded", () => {
             // Draw centered logo (180x180)
             const logoW = 180;
             const logoH = 180;
-            ctx.drawImage(logoImg, w / 2 - logoW / 2, h - 210, logoW, logoH);
+            ctx.drawImage(logoImg, w / 2 - logoW / 2, h - 280, logoW, logoH);
             ctx.restore();
         } else {
             // Fallback to text signature if logo fails to load
@@ -551,9 +551,16 @@ document.addEventListener("DOMContentLoaded", () => {
             // Soft glowing text
             ctx.shadowColor = "rgba(100, 223, 223, 0.5)";
             ctx.shadowBlur = 10;
-            ctx.fillText("من سعي 💙", w / 2, h - 180);
+            ctx.fillText("من سعي 💙", w / 2, h - 230);
         }
-        
+
+        // 12. إضافة معرف الإنستجرام (@saey.om)
+        ctx.font = "400 32px Cairo";
+        ctx.fillStyle = "rgba(255, 255, 255, 0.55)";
+        ctx.textAlign = "center";
+        ctx.shadowBlur = 0;
+        ctx.fillText("saey.om@", w / 2, h - 70);
+
         ctx.shadowBlur = 0; // Final cleanup
     }
 

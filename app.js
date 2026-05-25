@@ -468,7 +468,17 @@ document.addEventListener("DOMContentLoaded", () => {
         ctx.fillStyle = nameGlow;
         ctx.fillRect(w/2 - 400, 750, 800, 240);
 
-        ctx.font = "900 120px Cairo";
+        // Dynamic font size adjustment based on name length
+        let fontSize = 120; // الحجم الافتراضي
+        const maxNameWidth = 850; // أقصى عرض مسموح به للاسم في التصميم
+        ctx.font = `900 ${fontSize}px Cairo`;
+        
+        // تقليل حجم الخط تدريجياً حتى يتناسب مع العرض المسموح به
+        while (ctx.measureText(name).width > maxNameWidth && fontSize > 40) {
+            fontSize -= 5;
+            ctx.font = `900 ${fontSize}px Cairo`;
+        }
+
         ctx.textAlign = "center";
         
         // Name shadow

@@ -294,11 +294,8 @@ document.addEventListener("DOMContentLoaded", () => {
         // 2. Try drawing the custom background image
         let bgImg;
         try {
-            if (typeof BACKGROUND_IMAGE_BASE64 !== "undefined") {
-                bgImg = await loadImage(BACKGROUND_IMAGE_BASE64);
-            } else {
-                bgImg = await loadImage("background.jpg");
-            }
+            // الاعتماد المباشر على ملف صورة العيد المضاف للمجلد
+            bgImg = await loadImage("background.jpg");
         } catch (e) {
             console.warn("Could not load background image, using premium gradient fallback.", e);
         }
@@ -308,12 +305,12 @@ document.addEventListener("DOMContentLoaded", () => {
         if (hasBgImg) {
             ctx.drawImage(bgImg, 0, 0, w, h);
             
-            // Add a soft dark overlay for text readability
+            // إضافة طبقة تدرج ناعمة جداً لضمان وضوح النص مع الحفاظ على تفاصيل الصورة
             const overlayGrad = ctx.createLinearGradient(0, 0, 0, h);
-            overlayGrad.addColorStop(0, "rgba(5, 11, 20, 0.45)");   // Dark top
-            overlayGrad.addColorStop(0.4, "rgba(5, 11, 20, 0.15)");  // Lighter center
-            overlayGrad.addColorStop(0.7, "rgba(5, 11, 20, 0.55)"); // Darker name/greeting area
-            overlayGrad.addColorStop(1, "rgba(5, 11, 20, 0.85)");    // Dark bottom
+            overlayGrad.addColorStop(0, "rgba(5, 11, 20, 0.3)");   
+            overlayGrad.addColorStop(0.4, "rgba(5, 11, 20, 0.05)"); 
+            overlayGrad.addColorStop(0.7, "rgba(5, 11, 20, 0.4)"); 
+            overlayGrad.addColorStop(1, "rgba(5, 11, 20, 0.7)");    
             ctx.fillStyle = overlayGrad;
             ctx.fillRect(0, 0, w, h);
         } else {

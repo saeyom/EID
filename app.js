@@ -599,7 +599,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const url = URL.createObjectURL(blob);
             const a = document.createElement("a");
             a.href = url;
-            a.download = "123.png";
+            a.download = "كل عام وانت بخير.png";
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);

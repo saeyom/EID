@@ -435,7 +435,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const calW = 700;
             const calH = Math.round(calligraphyImg.naturalHeight * (calW / calligraphyImg.naturalWidth));
             const calX = (w - calW) / 2;
-            const calY = 120; // positioned so bottom (~820) is just above the name at 890
+            const calY = 80; // رفع المخطوطة للأعلى
 
             // Process image: remove white background, keep strokes
             const tmpCanvas = document.createElement("canvas");
@@ -481,11 +481,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // 9. Render User Name
         // Glowing Background behind name to stand out
-        const nameGlow = ctx.createRadialGradient(w/2, 870, 20, w/2, 870, 280);
+        const nameGlow = ctx.createRadialGradient(w/2, 810, 20, w/2, 810, 280);
         nameGlow.addColorStop(0, "rgba(100, 223, 223, 0.15)");
         nameGlow.addColorStop(1, "rgba(0, 0, 0, 0)");
         ctx.fillStyle = nameGlow;
-        ctx.fillRect(w/2 - 400, 750, 800, 240);
+        ctx.fillRect(w/2 - 400, 690, 800, 240);
 
         // Dynamic font size adjustment based on name length
         let fontSize = 120; // الحجم الافتراضي
@@ -506,14 +506,14 @@ document.addEventListener("DOMContentLoaded", () => {
         ctx.shadowOffsetY = 6;
         
         // Blue to cyan gradient for name
-        const nameGrad = ctx.createLinearGradient(0, 810, 0, 930);
+        const nameGrad = ctx.createLinearGradient(0, 750, 0, 870);
         nameGrad.addColorStop(0, "#FFFFFF");
         nameGrad.addColorStop(0.5, "#E0F7FA");
         nameGrad.addColorStop(1, "#64DFDF");
         ctx.fillStyle = nameGrad;
         
         // Draw user name (e.g. "عبد الرحمن")
-        ctx.fillText(name, w / 2, 890);
+        ctx.fillText(name, w / 2, 830);
         ctx.shadowBlur = 0;
         ctx.shadowOffsetY = 0;
 

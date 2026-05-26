@@ -138,31 +138,37 @@ document.addEventListener("DOMContentLoaded", () => {
             await drawGreetingCard(name, gender);
             
             // 5. Complete Progress Bar
-            clearInterval(progressInterval);
             progressBar.style.width = "100%";
             
             // Convert to image URI
             setTimeout(() => {
                 try {
+                    clearInterval(progressInterval);
                     const dataUrl = canvas.toDataURL("image/png");
+                    if (!dataUrl || dataUrl === "data:,") throw new Error("Canvas is empty");
+                    
                     previewImage.src = dataUrl;
                     
                     // Hide Loader, Show Result
                     loadingSection.classList.add("hidden");
                     resultSection.classList.remove("hidden");
                     
-                    // Smooth fade-in image loader class
                     setTimeout(() => {
                         previewWrapper.classList.add("loaded");
                     }, 100);
                     
                     showToast("تم توليد معايدتك الفاخرة بنجاح 💙");
                 } catch (err) {
-                    console.error("Canvas export failed inside timeout", err);
+                    console.error("خطأ في تصدير الصورة:", err);
                     clearInterval(progressInterval);
                     loadingSection.classList.add("hidden");
                     inputSection.classList.remove("hidden");
-                    showToast("عذراً، قيود المتصفح تمنع تصدير الصور محلياً. يرجى تشغيل الموقع عبر سيرفر محلي (Live Server).", false);
+                    
+                    if (window.location.protocol === 'file:') {
+                        showToast("عذراً، المتصفح يمنع تشغيل التقنية محلياً. يرجى سحب المجلد لبرنامج VS Code وتشغيله عبر Live Server.", false);
+                    } else {
+                        showToast("فشل تصدير الصورة. تأكد من أن جميع الملفات محملة بشكل صحيح.", false);
+                    }
                 }
             }, 300);
             
@@ -178,27 +184,23 @@ document.addEventListener("DOMContentLoaded", () => {
     // Font Loader Verification
     async function ensureFontsLoaded() {
         if (document.fonts) {
+            const fontsToLoad = [
+                { name: 'Amiri', url: 'https://fonts.gstatic.com/s/amiri/v26/J7aRnpdDnyFm85ra-pg.woff2' },
+                { name: 'Cairo', url: 'https://fonts.gstatic.com/s/cairo/v28/SLXJ1O5Obju573DF1K04WbA.woff2' },
+                { name: 'Tajawal', url: 'https://fonts.gstatic.com/s/tajawal/v15/I0abDF4CJ1Ea189vX9mHmwI.woff2' },
+                { name: 'Alnaseeb', url: './QWxuYXNlZWItUmVndWxhci5vdGYxNjU2NDg4NDM5ODI3' }
+            ];
+
             try {
-                // Pre-declare and load the exact fonts we'll render on canvas
-                const amiriFont = new FontFace('Amiri', 'url(https://fonts.gstatic.com/s/amiri/v26/J7aRnpdDnyFm85ra-pg.woff2)');
-                const cairoFont = new FontFace('Cairo', 'url(https://fonts.gstatic.com/s/cairo/v28/SLXJ1O5Obju573DF1K04WbA.woff2)');
-                const tajawalFont = new FontFace('Tajawal', 'url(https://fonts.gstatic.com/s/tajawal/v15/I0abDF4CJ1Ea189vX9mHmwI.woff2)');
-                
-                // Register fonts in document context
-                document.fonts.add(amiriFont);
-                document.fonts.add(cairoFont);
-                document.fonts.add(tajawalFont);
-                
-                // Load them
-                await Promise.all([
-                    amiriFont.load(),
-                    cairoFont.load(),
-                    tajawalFont.load(),
-                    document.fonts.load("bold 100px Amiri"),
-                    document.fonts.load("900 130px Cairo"),
-                    document.fonts.load("500 52px Tajawal")
-                ]);
-                
+                for (const font of fontsToLoad) {
+                    const f = new FontFace(font.name, `url(${font.url})`);
+                    try {
+                        const loaded = await f.load();
+                        document.fonts.add(loaded);
+                    } catch (e) {
+                        console.warn(`فشل تحميل الخط ${font.name}:`, e);
+                    }
+                }
                 await document.fonts.ready;
             } catch (error) {
                 console.warn("Could not load Google Fonts remotely. Falling back to system fonts.", error);
@@ -245,30 +247,37 @@ document.addEventListener("DOMContentLoaded", () => {
         ctx.fill('evenodd');
     }
 
-    // Wrap Arabic text into multi-line paragraph and center it vertically
+    // المحسنة لتدعم الأسطر اليدوية والآلية معا Wrap Arabic text 
     function wrapAndDrawText(text, x, y, maxWidth, lineHeight) {
-        const words = text.split(" ");
-        let line = "";
-        const lines = [];
+        // تقسيم النص بناءً على الأسطر الجديدة أولاً
+        const paragraphs = text.split("\n");
+        let finalLines = [];
 
-        for (let n = 0; n < words.length; n++) {
-            let testLine = line + words[n] + " ";
-            let metrics = ctx.measureText(testLine);
-            let testWidth = metrics.width;
-            if (testWidth > maxWidth && n > 0) {
-                lines.push(line);
-                line = words[n] + " ";
-            } else {
-                line = testLine;
+        paragraphs.forEach(p => {
+            if (p.trim() === "") {
+                finalLines.push(""); // حفظ الأسطر الفارغة
+                return;
             }
-        }
-        lines.push(line);
+            const words = p.split(" ");
+            let line = "";
+            for (let n = 0; n < words.length; n++) {
+                let testLine = line + words[n] + " ";
+                let testWidth = ctx.measureText(testLine).width;
+                if (testWidth > maxWidth && n > 0) {
+                    finalLines.push(line);
+                    line = words[n] + " ";
+                } else {
+                    line = testLine;
+                }
+            }
+            finalLines.push(line);
+        });
 
         // Center lines block vertically around Y coordinate
-        let currentY = y - ((lines.length - 1) * lineHeight) / 2;
+        let currentY = y - ((finalLines.length - 1) * lineHeight) / 2;
         
-        for (let i = 0; i < lines.length; i++) {
-            ctx.fillText(lines[i].trim(), x, currentY);
+        for (let i = 0; i < finalLines.length; i++) {
+            ctx.fillText(finalLines[i].trim(), x, currentY);
             currentY += lineHeight;
         }
     }
@@ -277,6 +286,7 @@ document.addEventListener("DOMContentLoaded", () => {
     function loadImage(src) {
         return new Promise((resolve, reject) => {
             const img = new Image();
+            img.crossOrigin = "anonymous";
             img.onload = () => resolve(img);
             img.onerror = (e) => reject(e);
             img.src = src;
@@ -295,12 +305,17 @@ document.addEventListener("DOMContentLoaded", () => {
         let bgImg;
         try {
             // الاعتماد المباشر على ملف صورة العيد المضاف للمجلد
-            bgImg = await loadImage("background.jpg");
+            if (typeof BACKGROUND_IMAGE_BASE64 !== "undefined") {
+                bgImg = await loadImage(BACKGROUND_IMAGE_BASE64);
+            } else {
+                bgImg = await loadImage("background.jpg");
+            }
         } catch (e) {
             console.warn("Could not load background image, using premium gradient fallback.", e);
         }
 
-        const hasBgImg = !!bgImg;
+        // التحقق من أن الصورة محملة ولها أبعاد صحيحة
+        const hasBgImg = bgImg && bgImg.naturalWidth > 0;
 
         if (hasBgImg) {
             ctx.drawImage(bgImg, 0, 0, w, h);
@@ -425,36 +440,40 @@ document.addEventListener("DOMContentLoaded", () => {
             // Process image: remove white background, keep strokes
             const tmpCanvas = document.createElement("canvas");
             tmpCanvas.width = calW;
-            tmpCanvas.height = calH;
+            tmpCanvas.height = calH || 400; // Fallback height if calc fails
             const tmpCtx = tmpCanvas.getContext("2d");
             tmpCtx.drawImage(calligraphyImg, 0, 0, calW, calH);
 
-            const imgData = tmpCtx.getImageData(0, 0, calW, calH);
-            const d = imgData.data;
-            for (let i = 0; i < d.length; i += 4) {
-                const r = d[i], g = d[i+1], b = d[i+2];
-                const brightness = (r + g + b) / 3;
-                const isGolden = r > 160 && g > 120 && b < 80;
+            try {
+                const imgData = tmpCtx.getImageData(0, 0, calW, tmpCanvas.height);
+                const d = imgData.data;
+                for (let i = 0; i < d.length; i += 4) {
+                    const r = d[i], g = d[i+1], b = d[i+2];
+                    const brightness = (r + g + b) / 3;
+                    const isGolden = r > 160 && g > 120 && b < 80;
 
-                if (brightness > 210) {
-                    // White/near-white → fully transparent
-                    d[i+3] = 0;
-                } else if (isGolden) {
-                    // Golden pixels → keep golden, full opacity
-                    d[i]   = 255;
-                    d[i+1] = 200;
-                    d[i+2] = 0;
-                    d[i+3] = 255;
-                } else {
-                    // Dark/gray strokes → white-cream color with proportional opacity
-                    const alpha = Math.min(255, Math.round((210 - brightness) * 2));
-                    d[i]   = 255;
-                    d[i+1] = 245;
-                    d[i+2] = 220;
-                    d[i+3] = alpha;
+                    if (brightness > 210) {
+                        // White/near-white → fully transparent
+                        d[i+3] = 0;
+                    } else if (isGolden) {
+                        // Golden pixels → keep golden, full opacity
+                        d[i]   = 255;
+                        d[i+1] = 200;
+                        d[i+2] = 0;
+                        d[i+3] = 255;
+                    } else {
+                        // Dark/gray strokes → white-cream color with proportional opacity
+                        const alpha = Math.min(255, Math.round((210 - brightness) * 2));
+                        d[i]   = 255;
+                        d[i+1] = 245;
+                        d[i+2] = 220;
+                        d[i+3] = alpha;
+                    }
                 }
+                tmpCtx.putImageData(imgData, 0, 0);
+            } catch (secErr) {
+                console.warn("Could not process calligraphy pixels due to security restrictions. Drawing original.", secErr);
             }
-            tmpCtx.putImageData(imgData, 0, 0);
 
             // Draw processed calligraphy onto main canvas
             ctx.drawImage(tmpCanvas, calX, calY);
@@ -471,12 +490,12 @@ document.addEventListener("DOMContentLoaded", () => {
         // Dynamic font size adjustment based on name length
         let fontSize = 120; // الحجم الافتراضي
         const maxNameWidth = 850; // أقصى عرض مسموح به للاسم في التصميم
-        ctx.font = `900 ${fontSize}px Cairo`;
+        ctx.font = `900 ${fontSize}px Zain, Cairo, sans-serif`; 
         
         // تقليل حجم الخط تدريجياً حتى يتناسب مع العرض المسموح به
         while (ctx.measureText(name).width > maxNameWidth && fontSize > 40) {
             fontSize -= 5;
-            ctx.font = `900 ${fontSize}px Cairo`;
+            ctx.font = `900 ${fontSize}px Zain, Cairo, sans-serif`;
         }
 
         ctx.textAlign = "center";
@@ -499,9 +518,11 @@ document.addEventListener("DOMContentLoaded", () => {
         ctx.shadowOffsetY = 0;
 
         // 10. Draw Gender-Specific Card Greeting Text
-        const greetingText = gender === "girl" 
-            ? "كل عام وأنتِ بخير وصحة وسلامة، وأدام الله عليكِ العافية والفرح، وكل سنة وإنتِ طيبة. 💙"
-            : "كل عام وأنت بخير وصحة وسلامة، وأدام الله عليك العافية والفرح، وكل سنة وإنت طيب. 💙";
+        const greetingText = `بأسمى عبارات التهاني والتبريكات
+نهنئكم بحلول عيد الأضحى المبارك 🌙✨
+سائلين المولى أن يملأ أيامكم فرحًا وسعادة
+وأن يعيده عليكم أعوامًا عديدة بالخير واليُمن والبركات
+كل عام وأنتم بخير 🤍`;
             
         ctx.font = "500 52px Tajawal";
         
@@ -517,7 +538,7 @@ document.addEventListener("DOMContentLoaded", () => {
         ctx.shadowOffsetY = 4;
         
         // Wrap and draw message
-        wrapAndDrawText(greetingText, w / 2, 1180, 860, 85);
+        wrapAndDrawText(greetingText, w / 2, 1250, 860, 85);
         ctx.shadowBlur = 0;
         ctx.shadowOffsetY = 0;
 

@@ -595,18 +595,25 @@ document.addEventListener("DOMContentLoaded", () => {
     // Direct Image Download (Triggered by button)
     downloadBtn.addEventListener("click", () => {
         // Ensure image is fully drawn
-        canvas.toBlob((blob) => {
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = "كل عام وانت بخير.png";
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            
-            showToast("تم بدء تحميل الصورة بنجاح! 💾");
-        }, "image/png");
+        setTimeout(() => {
+            canvas.toBlob((blob) => {
+                if (!blob) {
+                    showToast("حدث خطأ أثناء تصدير الصورة. الرجاء المحاولة مرة أخرى.", false);
+                    return;
+                }
+
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = "كل عام وانت بخير.png";
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                showToast("تم بدء تحميل الصورة بنجاح! 💾");
+            }, "image/png");
+        }, 300); // Delay to ensure canvas is fully rendered
     });
 
     // Reset Form / Create Another Card
